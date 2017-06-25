@@ -1,0 +1,4 @@
+python paho.mqtt -> pip install paho-mqtt
+python tornado.websocket -> pip install tornado
+python  pymongo -> python -m pip install pymongo
+node angularjs websocket -> npm install angular-websocket --save
