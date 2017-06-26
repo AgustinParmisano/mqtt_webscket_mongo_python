@@ -1,20 +1,24 @@
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
+import json
 import tornado
 import tornado.websocket
+import datetime, sys, time
+import ast
 from datetime import timedelta
-from pymongo import MongoClient
+#from pymongo import MongoClient
 
-mongo_client = MongoClient('localhost', 27017)
-db = mongo_client['dbname']
-measures = db['collname']
+#mongo_client = MongoClient('localhost', 27017)
+#db = mongo_client['dbname']
+#measures = db['collname']
 
 clients = []
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    tt = datetime.datetime.now()
 
     def check_origin(self, origin):
-        print "Origin: " + str(origin)
+        #print "origin: " + origin
         return True
 
     # the client connected
@@ -24,88 +28,72 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         clients.append(self)
         tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=1), self.test)
 
+    def test(self):
+        try:
+            message = "Hello Web Socket!"
+            try:
+                time.sleep(1)
+            except Exception as e:
+                print "Exception: "
+                print e
+                #raise(e)
+            self.write_message(message)
+        except Exception as e:
+            print "Exception: "
+            print e
+            self.write_message("Es un write message")
+            #raise(e)
+        else:
+            tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=0.1), self.test)
+
     # the client sent the message
     def on_message(self, message):
         print ("Message: " + message)
         try:
             message = ast.literal_eval(message)
-            print(message)
+            print("AST Message: " + str(message))
 
         except Exception as e:
             print ("Exception:")
             print e
+        #self.write_message(message)
 
     # client disconnected
     def on_close(self):
         print ("Client disconnected")
         clients.remove(self)
 
-    def test(self):
-        message = "Hello Web Socket!"
-        try:
-            self.write_message(message)
-        except Exception as e:
-            print "Exception: "
-            print e
-            self.write_message("Es un write message")
-        else:
-            tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=0.1), self.test)
+#MQTT Functions
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
 
-class MyMQTTClass:
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe("topic")
 
-    def __init__(self, clientid=None, topic="topic"):
-        self._mqttc = mqtt.Client(clientid)
-        self._mqttc.on_message = self.mqtt_on_message
-        self._mqttc.on_connect = self.mqtt_on_connect
-        self._mqttc.on_publish = self.mqtt_on_publish
-        self._mqttc.on_subscribe = self.mqtt_on_subscribe
-        self.topic = topic
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.payload))
 
-    def mqtt_on_connect(self, mqttc, obj, flags, rc):
-        print("rc: "+str(rc))
+def on_subscribe(client, userdata,mid, granted_qos):
+    print "userdata : " +str(userdata)
 
-    def mqtt_on_message(self, mqttc, obj, msg):
-        print("Msg: " + str(msg))
-        print("Msg.topic: " + msg.topic)
-        print("Msg.qos: " + str(msg.qos))
-        print("Msg.payload: " + str(msg.payload))
-        print("Obj: " + str(obj))
-        print("Mqttc: " + str(mqttc))
-        print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
+def on_publish(mosq, obj, mid):
+    print("mid: " + str(mid))
 
-    def mqtt_on_publish(self, mqttc, obj, mid):
-        print("mid: "+str(mid))
-
-    def mqtt_on_subscribe(self, mqttc, obj, mid, granted_qos):
-        print("Subscribed: "+str(mid)+" "+str(granted_qos))
-
-    def mqtt_on_log(self, mqttc, obj, level, string):
-        print(string)
-
-    def run(self):
-        self._mqttc.connect("localhost", 1883, 60)
-        self._mqttc.subscribe(self.topic, 0)
-        rc = 0
-        while rc == 0:
-            rc = self._mqttc.loop()
-        return rc
-
-    def set_topic(self, topic):
-        self.topic = topic
-
-    def set_topic(self, topic):
-        self.topic = topic
 
 socket = tornado.web.Application([(r"/websocket", WebSocketHandler),])
-
 if __name__ == "__main__":
+    #Start WebScoket Client
     print("Starting WebSocket")
     print("Opening port 8888")
     socket.listen(8888)
 
+    #Start MQTT Client
     print("Starting MQTT Client")
-    mqttc = MyMQTTClass()
-    rc = mqttc.run()
-    print("rc: "+str(rc))
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect("localhost", 1883, 60)
+    client.loop_start()
 
 tornado.ioloop.IOLoop.instance().start()

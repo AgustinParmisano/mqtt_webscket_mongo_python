@@ -1,22 +1,58 @@
-<script>
-//Web Socket comunication
-//Connect to server
-var ws = new WebSocket("ws://localhost:8888/websocket");
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script type="text/javascript">
 
-//Open the socket and say hi
-ws.onopen = function() {
-  ws.send("onopen: Hello, world");
-};
+      $(document).ready(function(){
+        //Web Socket comunication
+         //Connect to server
+         var ws = new WebSocket("ws://localhost:8888/websocket");
+         //console.log(ws);
+         //Open the socket and say hi
+         ws.onopen = function() {
+           ws.send("Hello, world");
+         };
 
-//Receive message form server
-ws.onmessage = function (evt) {
-  console.log("onmessage");
-  console.log("Event: " + evt);
-  console.log("Event Data: " + evt.data);
-  json = JSON.parse(evt.data);
-  console.log("Event Data to Json: " + json);
-};
+         //Receive message form server
+         ws.onmessage = function (evt) {
+           console.log("Evt Data: " + evt.data);
+           //json = JSON.parse(evt.data);
+           //console.log(json);
 
-//ws.close();
+           //set the variables of the object to global variables
+           //var data1 = json.data1;
+           //var data2 = json.data2;
+         }
 
-</script>
+        $('#onbtn').click(function () {
+          console.log("ON?");
+           ws.send(JSON.stringify({"relay1":1}));
+        });
+        $('#offbtn').click(function () {
+          console.log("OFF?");
+           ws.send(JSON.stringify({"relay1":0}));
+        });
+
+        $("p").click(function(){
+          $(this).hide();
+        });
+      });
+
+      </script>
+
+   </head>
+   <body>
+      <p>Hola</p>
+      <div id="sse">
+         <br>
+        <label id="onbtn" class="btn btn-success" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+          <input type="button" name="on" value="on" data-parsley-multiple="gender">
+        </label>
+        <label id="offbtn" class="btn btn-danger" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+          <input type="button" name="off" value="off" data-parsley-multiple="gender">
+        </label>
+      </div>
+
+   </body>
+</html>
