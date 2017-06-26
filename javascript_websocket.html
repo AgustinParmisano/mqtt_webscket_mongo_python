@@ -27,11 +27,13 @@
 
         $('#onbtn').click(function () {
           console.log("ON?");
-           ws.send(JSON.stringify({"relay1":1}));
+           //ws.send(JSON.stringify({"relay1":1}));
+           ws.send("mqtt")
         });
         $('#offbtn').click(function () {
           console.log("OFF?");
-           ws.send(JSON.stringify({"relay1":0}));
+           //ws.send(JSON.stringify({"relay1":0}));
+           ws.send("mongo")
         });
 
         $("p").click(function(){
