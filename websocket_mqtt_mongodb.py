@@ -6,13 +6,31 @@ import tornado.websocket
 import datetime, sys, time
 import ast
 from datetime import timedelta
-#from pymongo import MongoClient
+from pymongo import MongoClient
 
-#mongo_client = MongoClient('localhost', 27017)
-#db = mongo_client['dbname']
-#measures = db['collname']
+#Mongo
+mongo_client = MongoClient('localhost', 27017)
+db = mongo_client['dbname']
+measures = db['collname']
 
+#Websockets clients
 clients = []
+
+#Mongo Basic Functions
+
+def get_single_document(collname):
+    return db.collname.find_one()
+
+def get_all_documents(collname):
+    return db.collname.find()
+
+#Get documents with some key:value, key & value has to by string types
+def get_key_value(collname, key, value):
+    return db.collname.find({key:value})
+
+#Insert document, has to be json or dictionary type
+def insert_one_document(collname, document):
+    db.collname.insert_one(document)
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     tt = datetime.datetime.now()
