@@ -51,15 +51,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             message = "Hello Web Socket!"
             try:
                 time.sleep(1)
+                self.write_message(message)
             except Exception as e:
                 print "Exception: "
                 print e
                 #raise(e)
-            self.write_message(message)
         except Exception as e:
             print "Exception: "
             print e
-            self.write_message("Es un write message")
+            self.write_message("Es un write message exeption:" + str(e))
             #raise(e)
         else:
             tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=0.1), self.test)

@@ -46,34 +46,36 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     # the client connected
     def open(self):
         print ("New client connected")
-        self.write_message("You are connected")
+        #self.write_message("You are connected")
         clients.append(self)
         tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=1), self.test)
 
     def test(self):
         try:
-            message = "Hello Web Socket!"
+            message = {'potencia':'0','tension':'0'}
             #print("Qeue: " + str(q))
             while not q.empty():
                 message = q.get()
-                print("Websocket Message: " + str(message))
-                if str(message) == "mongo_get":
-                    pprint.pprint(get_all_documents("testcoll"))
-                if str(message) == "mongo_put":
-                    insert_one_document("testcoll", {"mqtt_message":str(message)})
-                if str(message) == "mqtt_pub":
-                    publish.single("topic", message, hostname="localhost")
+                print("Message in MQTT Qeue: " + str(message))
             try:
                 time.sleep(1)
             except Exception as e:
                 print "Exception: "
                 print e
                 #raise(e)
-            self.write_message(message)
+            #message =  {'potencia':'78','tension':'62'}
+            try:
+                message = ast.literal_eval(str(message))
+                print("Sending Websocket Message: " + str(type(message)))
+                self.write_message(message)
+            except Exception as e:
+                print "Exception in Websocket AST: "
+                print e
+
         except Exception as e:
-            print "Exception: "
+            print "Exception in WebSocket test Function: "
             print e
-            self.write_message("Es un write message")
+            self.write_message("Error: " + str(e))
             #raise(e)
         else:
             tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=0.1), self.test)
@@ -114,22 +116,9 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
 
-    method = str(msg.payload).split(":")[0]
-    message = str(msg.payload).split(":")[1]
-
-    if str(method) == "websocket":
-        print("Method: " + str(method))
-        print("Message: " + str(message))
-        q.put(message)
-        #send to websocket
-
-    if str(method) == "mongo_put":
-        #save msg in mongo
-        insert_one_document("testcoll", {"mqtt_message":str(message)})
-
-    if str(method) == "mongo_get":
-        #save msg in mongo
-        pprint.pprint(get_single_document("testcoll"))
+    message = str(msg.payload)
+    q.put(message)
+    insert_one_document("testcoll", {"mqtt_message":str(message)})
 
 def on_subscribe(client, userdata,mid, granted_qos):
     print "userdata : " +str(userdata)
