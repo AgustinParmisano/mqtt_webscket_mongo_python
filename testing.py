@@ -23,18 +23,18 @@ clients = []
 #Mongo Basic Functions
 
 def get_single_document(collname):
-    return db.collname.find_one()
+    return db[collname].find_one()
 
 def get_all_documents(collname):
-    return db.collname.find()
+    return db[collname].find()
 
 #Get documents with some key:value, key & value has to by string types
 def get_key_value(collname, key, value):
-    return db.collname.find({key:value})
+    return db[collname].find({key:value})
 
 #Insert document, has to be json or dictionary type
 def insert_one_document(collname, document):
-    db.collname.insert_one(document)
+    db[collname].insert_one(document)
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     tt = datetime.datetime.now()
@@ -118,7 +118,14 @@ def on_message(client, userdata, msg):
 
     message = str(msg.payload)
     q.put(message)
-    insert_one_document("testcoll", {"mqtt_message":str(message)})
+    try:
+        message = ast.literal_eval(str(message))
+        print("Saving Data in MongoDB" + str(type(message)))
+        insert_one_document("testcoll", message)
+    except Exception as e:
+        print ("Exception:")
+        print e
+
 
 def on_subscribe(client, userdata,mid, granted_qos):
     print "userdata : " +str(userdata)
