@@ -85,15 +85,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         print ("Message From Web: " + message)
         try:
             #message = ast.literal_eval(message)
-            print("AST Message: " + str(message))
+            #print("AST Message: " + str(message))
 
-            if message == "mqtt":
+            if message == "on":
                 #Send message from websocket to mqtt
-                publish.single("topic", "mongo_put:posting from websocket then mqtt then mongo!", hostname="localhost")
+                publish.single("state", "on", hostname="localhost")
 
-            if message == "mongo":
+            if message == "off":
                 #Save message from websocket to mongo
-                insert_one_document("testcoll", {"test_message":message})
+                publish.single("state", "off", hostname="localhost")
 
         except Exception as e:
             print ("Exception:")
