@@ -6,7 +6,7 @@ import datetime, sys, time
 import ast
 from datetime import timedelta
 
-state = "off"
+state = "on"
 
 #MQTT Functions
 def on_connect(client, userdata, flags, rc):
@@ -23,13 +23,13 @@ def on_message(client, userdata, msg):
 
     print(msg.topic+" "+message)
 
-    if message == "on" and state == "off":
+    if message == "on":
         print "ON : " + message
-        state == "on"
+        state = "on"
 
-    if message == "off" and state == "on":
+    if message == "off":
         print "OFF : " + message
-        state == "off"
+        state = "off"
 
 
 def on_subscribe(client, userdata,mid, granted_qos):
@@ -50,5 +50,11 @@ if __name__ == "__main__":
         time.sleep(1)
         potencia = random.randint(0,100)
         tension = random.randint(0,100)
-        data = {"potencia": potencia, "tension": tension}
+        #date = datetime.datetime.now()
+        #year = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[0].split("-")[0]
+        #month = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[0].split("-")[1]
+        #day = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[0].split("-")[2]
+        #timenow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[1]
+        #data = {"potencia": potencia, "tension": tension, "estado": state, "anio": year, "mes": month, "dia": day, "hora": timenow}
+        data = {"potencia": potencia, "tension": tension, "estado": state}
         publish.single("topic", str(data), hostname="localhost")

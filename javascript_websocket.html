@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
    <head>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -11,7 +11,7 @@
          //console.log(ws);
          //Open the socket and say hi
          ws.onopen = function() {
-           ws.send("Hello, world from websoket!");
+           ws.send("Hello, world");
          };
 
          //Receive message form server
@@ -28,16 +28,22 @@
         $('#onbtn').click(function () {
           console.log("ON?");
            //ws.send(JSON.stringify({"relay1":1}));
-           ws.send("on")
+           ws.send("mqtt")
         });
         $('#offbtn').click(function () {
           console.log("OFF?");
            //ws.send(JSON.stringify({"relay1":0}));
-           ws.send("off")
+           ws.send("mongo")
         });
 
-        $("p").click(function(){
-          $(this).hide();
+        $('#databtn').click(function () {
+          console.log("data?");
+          var desde = $('#hora_desde').val();
+          var hasta = $('#hora_hasta').val();
+          var jsonmsg = JSON.stringify({"desde": desde, "hasta": hasta});
+          console.log("JSONMSG: " + jsonmsg);
+          ws.send(jsonmsg);
+          //ws.send("mongo")
         });
       });
 
@@ -53,6 +59,12 @@
         </label>
         <label id="offbtn" class="btn btn-danger" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
           <input type="button" name="off" value="off" data-parsley-multiple="gender">
+        </label>
+        <br>
+        Hora Desde: <input id="hora_desde" type="text" name="hora_desde" value=""><br>
+        Hora Hasta: <input id="hora_hasta" type="text" name="hora_hasta" value=""><br>
+        <label id="databtn" class="btn btn-danger" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+          <input type="button" name="data" value="data" data-parsley-multiple="gender">
         </label>
       </div>
 
