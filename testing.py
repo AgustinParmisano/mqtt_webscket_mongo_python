@@ -5,78 +5,16 @@ import tornado
 import tornado.websocket
 import datetime, sys, time
 import ast
-from datetime import timedelta
-from pymongo import MongoClient
 import Queue
 import pprint
+from datetime import timedelta
+from mongohandler_class import MongoHandler
+from measure_class import Measure
 
 q = Queue.Queue()
 
-#Mongo
-mongo_client = MongoClient('localhost', 27017)
-db = mongo_client['testdb'] #db example
-#measures = db['collname'] #coll example
-
 #Websockets clients
 clients = []
-
-#Mongo Basic Functions
-
-class Measure(object):
-    """docstring for Measure."""
-    def __init__(self, potencia, tension, timedata, state):
-        super(Measure, self).__init__()
-        self.potencia = potencia
-        self.tension = tension
-        self.timedata = timedata
-        self.state = state
-
-    def set_potencia(self, potencia):
-        self.potencia = potencia
-
-    def set_tension(self, tension):
-        self.tension = tension
-
-    def set_timedata(self, timedata):
-        self.timedata = timedata
-
-    def set_state(self, state):
-        self.state = state
-
-    def get_potencia(self):
-        return self.potencia
-
-    def get_tension(self):
-        return self.tension
-
-    def get_timedata(self):
-        return self.timedata
-
-    def get_state(self):
-        return self.state
-
-def get_single_document(collname):
-    return db[collname].find_one()
-
-def get_all_documents(collname):
-    return db[collname].find()
-
-#Get documents with some key:value, key & value has to by string types
-def get_key_value(collname, key, value):
-    return db[collname].find({key:value})
-
-#Insert document, has to be json or dictionary type
-def insert_one_document(collname, document):
-    db[collname].insert_one(document)
-
-#Get data from-to times: String Format Example: 2013-09-28 20:30:55.78200
-def get_documents_from_to_time(collname, from_time, to_time):
-    #Query Example in Mongo shell:
-    #db.testcoll.find({timedata:{$gte: ISODate("2017-06-27T20:28:00.000Z"),$lt: ISODate("2017-06-27T20:28:10.000Z")}})
-    from_time = datetime.datetime.strptime(from_time, "%Y-%m-%d %H:%M:%S.%f")
-    to_time = datetime.datetime.strptime(to_time, "%Y-%m-%d %H:%M:%S.%f")
-    posts = db.testcoll.find({"timedata":{"$gte": from_time, "$lt": to_time}})
-    return posts
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     tt = datetime.datetime.now()
@@ -103,7 +41,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 try:
                     if len(clients) > 0:
                         message = ast.literal_eval(str(message))
-                        print("Sending Websocket Message: " + str(type(message)))
+                        print("Sending Websocket Message: " + str(message))
                         self.write_message(message)
                 except Exception as e:
                     print "Exception in Websocket AST: "
@@ -133,19 +71,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 publish.single("state", "off", hostname="localhost")
 
             else:
-                print "ELSE"
                 #Eval if message is valid and do something (e.g: search in mongo)
                 #String Format Example: 2013-09-28 20:30:55.78200
-                from_time = "2017-06-27 21:41:00.00000" #example
-                to_time = "2017-06-27 21:41:10.00000"   #example
-                docs = get_documents_from_to_time("testcoll", from_time, to_time)
-                output = []
-                for post in docs:
-                    print post["potencia"]
-                    pprint.pprint(post)
-                    #potencia, tension, timedata, state
-                    output.append({'potencia' : post["potencia"], 'tension' : post["tension"],'timedata' : post['timedata'], "state" : post['estado']})
-                print output
+                from_time = "2017-06-28 17:04:00.00000" #example
+                to_time = "2017-06-28 17:05:00.00000"    #example
+                docs = mongo.get_documents_from_to_time("testcoll", from_time, to_time)
+                #print "DOCS: " + str(docs)
 
         except Exception as e:
             print ("Exception:")
@@ -178,7 +109,7 @@ def on_message(client, userdata, msg):
         measure = Measure(message["potencia"], message["tension"], date_time_now, message["estado"], )
 
         print("Saving Data in MongoDB" + str(measure.__dict__))
-        insert_one_document("testcoll", measure.__dict__)
+        mongo.insert_one_document("testcoll", measure.__dict__)
     except Exception as e:
         print ("Exception:")
         print e
@@ -190,7 +121,7 @@ def on_subscribe(client, userdata,mid, granted_qos):
 def on_publish(mosq, obj, mid):
     print("mid: " + str(mid))
 
-
+mongo = MongoHandler('localhost', 27017, 'testdb')
 socket = tornado.web.Application([(r"/websocket", WebSocketHandler),])
 if __name__ == "__main__":
     #Start WebScoket Client

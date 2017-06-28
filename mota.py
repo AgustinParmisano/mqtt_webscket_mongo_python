@@ -50,11 +50,5 @@ if __name__ == "__main__":
         time.sleep(1)
         potencia = random.randint(0,100)
         tension = random.randint(0,100)
-        #date = datetime.datetime.now()
-        #year = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[0].split("-")[0]
-        #month = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[0].split("-")[1]
-        #day = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[0].split("-")[2]
-        #timenow = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").split(" ")[1]
-        #data = {"potencia": potencia, "tension": tension, "estado": state, "anio": year, "mes": month, "dia": day, "hora": timenow}
         data = {"potencia": potencia, "tension": tension, "estado": state}
         publish.single("topic", str(data), hostname="localhost")
